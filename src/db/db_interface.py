@@ -66,7 +66,3 @@ class DatabaseInterface:
                     temp_target.photos.append(Photo(photo_id=photo.photo_id, target_vk_id=photo.target_vk_id))
                 favorites_list.append(temp_target)
         return favorites_list
-
-
-if __name__ == '__main__':
-    pass
