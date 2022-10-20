@@ -29,10 +29,12 @@ class PhotoTable(Base):
     c2 = sq.PrimaryKeyConstraint(photo_id, target_vk_id)
 
 
-def create_tables(engine, launch_drop):
+def create_tables(engine, launch_drop, echo):
     if launch_drop:
         Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    # For activating engine echo AFTER creating tables.
+    engine.echo = echo
     return Base.metadata
 
 
