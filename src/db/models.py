@@ -29,12 +29,9 @@ class PhotoTable(Base):
     c2 = sq.PrimaryKeyConstraint(photo_id, target_vk_id)
 
 
-def drop_tables(engine):
-    Base.metadata.drop_all(engine)
-    return None
-
-
-def create_tables(engine):
+def create_tables(engine, launch_drop):
+    if launch_drop:
+        Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     return Base.metadata
 

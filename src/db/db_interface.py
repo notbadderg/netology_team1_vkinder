@@ -1,7 +1,7 @@
 import sqlalchemy as sq
 import sqlalchemy.exc
 from sqlalchemy.orm import Session
-from src.db.models import create_tables as ct, drop_tables as dt, FavoriteTable, TargetTable, PhotoTable
+from src.db.models import create_tables as ct, FavoriteTable, TargetTable, PhotoTable
 from src.db.data_classes import Target, Photo
 
 
@@ -13,7 +13,8 @@ class DatabaseInterface:
         self.user = db_cfg.user
         self.name = db_cfg.name
         self.launch_drop = db_cfg.launch_drop
-        self.engine = sq.create_engine(self._make_dsn())
+
+        self.engine = sq.create_engine(self._make_dsn(), echo=db_cfg.echo)
         self.create_table()
 
     def _make_dsn(self) -> str:
@@ -23,14 +24,8 @@ class DatabaseInterface:
         db_name = self.name
         return f"{driver}{credentials}@{address}/{db_name}"
 
-    def _drop_table(self) -> None:
-        dt(self.engine)
-        return None
-
     def create_table(self):
-        if self.launch_drop:
-            self._drop_table()
-        db_meta = ct(self.engine)
+        db_meta = ct(self.engine, self.launch_drop)
         return db_meta.tables
 
     def add_to_favorite(self, target, client_vk_id: int) -> bool:
@@ -49,8 +44,12 @@ class DatabaseInterface:
             except sqlalchemy.exc.DataError or sqlalchemy.exc.DatabaseError:
                 s.rollback()
             else:
-                s.commit()
-                is_committed = True
+                try:
+                    s.commit()
+                except sqlalchemy.exc.IntegrityError:
+                    s.rollback()
+                else:
+                    is_committed = True
         return is_committed
 
     def get_client_favorites_list(self, client_vk_id: int) -> list:
