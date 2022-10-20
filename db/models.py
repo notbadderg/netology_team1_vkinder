@@ -8,8 +8,8 @@ Base = declarative_base()
 class TargetTable(Base):
     __tablename__ = "target"
     vk_id = sq.Column(sq.Integer, nullable=False, primary_key=True, autoincrement=False)
-    name = sq.Column(sq.VARCHAR(length=50), nullable=False)
-    surname = sq.Column(sq.VARCHAR(length=50), nullable=False)
+    first_name = sq.Column(sq.VARCHAR(length=50), nullable=False)
+    last_name = sq.Column(sq.VARCHAR(length=50), nullable=False)
     url = sq.Column(sq.TEXT, nullable=False)
 
 
@@ -23,12 +23,10 @@ class FavoriteTable(Base):
 
 class PhotoTable(Base):
     __tablename__ = "photo"
+    photo_id = sq.Column(sq.TEXT, nullable=False)
     target_vk_id = sq.Column(sq.Integer, sq.ForeignKey("target.vk_id"), nullable=False)
     target = relationship(TargetTable, backref="photos")
-    url = sq.Column(sq.TEXT, nullable=False)
-    likes = sq.Column(sq.Integer, nullable=False)
-    c1 = sq.CheckConstraint(likes >= 0)
-    c2 = sq.PrimaryKeyConstraint(target_vk_id, url)
+    c2 = sq.PrimaryKeyConstraint(photo_id, target_vk_id)
 
 
 def drop_tables(engine):
