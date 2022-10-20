@@ -13,7 +13,7 @@ class VkBot():
         self._create_user_session(user_token)
 
     def _create_group_session(self, group_token, group_id):
-        """ Инициирует сессию с токеном группы """
+        """ Инициирует сессию с токеном группы  """
 
         self.group_session = vk_api.VkApi(token=group_token)
         self.longpoll = VkBotLongPoll(self.group_session, group_id)
