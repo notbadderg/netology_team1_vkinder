@@ -1,4 +1,4 @@
-from src.db.data_classes import *
+from src.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
 from src.db.db_interface import DatabaseInterface
 
 
@@ -9,8 +9,7 @@ class VkBot:
         self.user_token = tokens.user_token
 
     def start(self):
-
-        ############
+        #########
         def test_db():
             # ##FIXTURES:
             client_vk_id = 110
