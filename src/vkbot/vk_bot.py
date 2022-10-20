@@ -1,5 +1,5 @@
-from src.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
-from src.db.db_interface import DatabaseInterface
+from src.vkbot.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
+from src.vkbot.db.db_interface import DatabaseInterface
 
 
 class VkBot:

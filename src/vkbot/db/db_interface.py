@@ -1,8 +1,8 @@
 import sqlalchemy as sq
 import sqlalchemy.exc
 from sqlalchemy.orm import Session
-from src.db.models import create_tables as ct, FavoriteTable, TargetTable, PhotoTable
-from src.db.data_classes import Target, Photo
+from src.vkbot.db.models import create_tables as ct, FavoriteTable, TargetTable, PhotoTable
+from src.vkbot.db.data_classes import Target, Photo
 
 
 class DatabaseInterface:
