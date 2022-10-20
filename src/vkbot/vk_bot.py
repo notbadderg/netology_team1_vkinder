@@ -1,10 +1,11 @@
-from src.vkbot.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
-from src.vkbot.db.db_interface import DatabaseInterface
+from vkbot.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
+from vkbot.db.db_interface import DatabaseInterface
 
 
 class VkBot:
     def __init__(self, vk_config, db_config):
         DataClassesDBI.dbi = DatabaseInterface(db_config)
+        self.group_id = vk_config.group_id
         self.group_token = vk_config.group_token
         self.user_token = vk_config.user_token
 
