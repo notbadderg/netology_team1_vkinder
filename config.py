@@ -16,7 +16,7 @@ class DatabaseConfig(Config):
         self.launch_drop = os.getenv('DB_DROP_TABLES_AFTER_LAUNCH')
 
 
-class VkToken(Config):
+class VkTokensList(Config):
     group_token = os.getenv('VK_GROUP_TOKEN')
     user_token = os.getenv('VK_USER_TOKEN')
 
