@@ -17,8 +17,8 @@ class Target(DataClassesDBI):
         self.photos = []
 
     def add_favorite(self, client_vk_id: int):
-        self.dbi.add_to_favorite(self, client_vk_id)
-        return None
+        result = self.dbi.add_to_favorite(self, client_vk_id)
+        return result
 
 
 class TargetsList(DataClassesDBI):
