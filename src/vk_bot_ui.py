@@ -1,4 +1,3 @@
 class VkBotUI:
-    def __init__(self, vkb):
-        self.vkb = vkb
-
+    def __init__(self):
+        pass
