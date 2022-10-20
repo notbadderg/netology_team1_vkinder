@@ -23,7 +23,7 @@ class VkBot:
                 target = Target(user['id'],
                                 user['first_name'],
                                 user['last_name'],
-                                'sample_ulr')
+                                'sample_url')
 
                 for photo in imitation_user_photos_from_api:
                     target.photos.append(Photo(photo_id=photo['id'], target_vk_id=photo['owner_id']))
