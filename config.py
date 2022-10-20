@@ -14,7 +14,7 @@ class DatabaseConfig(Config):
         self.name = os.getenv('DB_NAME')
         self.user = os.getenv('DB_USER')
         self.password = os.getenv('DB_PASSWORD')
-        self.launch_drop = _str_to_bool_convert(os.getenv('DB_RE_CREATE_TABLES_AFTER_LAUNCH'))
+        self.launch_drop = _str_to_bool_convert(os.getenv('DB_DROP_TABLES_AFTER_LAUNCH'))
         self.echo = _str_to_bool_convert(os.getenv('DB_ECHO'))
 
 
