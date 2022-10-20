@@ -245,6 +245,16 @@ class VkBot():
     def start(self):
         self._listener()
         #########
+
+
+
+
+
+
+
+
+
+        #FOR QUICK DB TESTING
         def test_db():
             # ##FIXTURES:
             client_vk_id = 110
@@ -261,7 +271,9 @@ class VkBot():
                                 'sample_url')
 
                 for photo in imitation_user_photos_from_api:
-                    target.photos.append(Photo(photo_id=photo['id'], target_vk_id=photo['owner_id']))
+                    target.photos.append(Photo(photo_id=photo['id'],
+                                               target_vk_id=photo['owner_id'],
+                                               photo_link='sample_link'))
                 targets.append(target)
 
             # показываем по очереди фото из targets клиенту:
@@ -286,4 +298,4 @@ class VkBot():
                 # достаем фотки:
                 for photo in favorite.photos:
                     print(photo.photo_id)
-
+        # test_db()

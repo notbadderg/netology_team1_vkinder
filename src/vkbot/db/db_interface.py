@@ -41,7 +41,8 @@ class DatabaseInterface:
                                     target_vk_id=target.vk_id))
                 for photo in target.photos:
                     s.add(PhotoTable(photo_id=photo.photo_id,
-                                     target_vk_id=photo.target_vk_id))
+                                     target_vk_id=photo.target_vk_id,
+                                     photo_link=photo.photo_link))
             except sqlalchemy.exc.DataError or sqlalchemy.exc.DatabaseError:
                 s.rollback()
             else:
@@ -63,6 +64,9 @@ class DatabaseInterface:
                 statement_2 = sq.select(PhotoTable).filter_by(target_vk_id=temp_target.vk_id)
                 temp_photos_list = s.scalars(statement_2).all()
                 for photo in temp_photos_list:
-                    temp_target.photos.append(Photo(photo_id=photo.photo_id, target_vk_id=photo.target_vk_id))
+                    print(type(photo))
+                    temp_target.photos.append(Photo(photo_id=photo.photo_id,
+                                                    target_vk_id=photo.target_vk_id,
+                                                    photo_link=photo.photo_link))
                 favorites_list.append(temp_target)
         return favorites_list

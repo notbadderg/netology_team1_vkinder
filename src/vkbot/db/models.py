@@ -26,6 +26,7 @@ class PhotoTable(Base):
     photo_id = sq.Column(sq.TEXT, nullable=False)
     target_vk_id = sq.Column(sq.Integer, sq.ForeignKey("target.vk_id"), nullable=False)
     target = relationship(TargetTable, backref="photos")
+    photo_link = sq.Column(sq.TEXT, nullable=False)
     c2 = sq.PrimaryKeyConstraint(photo_id, target_vk_id)
 
 

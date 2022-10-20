@@ -3,9 +3,10 @@ class DataClassesDBI:
 
 
 class Photo:
-    def __init__(self, photo_id: int, target_vk_id: int):
+    def __init__(self, photo_id: int, target_vk_id: int, photo_link: str):
         self.photo_id = photo_id
         self.target_vk_id = target_vk_id
+        self.photo_link = photo_link
 
 
 class Target(DataClassesDBI):
