@@ -17,7 +17,7 @@ class VkBot:
             imitation_user_123_photos_from_api = [{'id': 111, 'owner_id': 123},
                                                   {'id': 112, 'owner_id': 123}]
 
-            #получаем первоначально инфу с апи чтобы сформировать объекты
+            #обрабатываем полученную инфу с апи чтобы сформировать объекты
             targets = TargetsList(client_vk_id=client_vk_id, dbi=self.dbi)
             for user in imitation_users_list_from_api:
                 target = Target(user['id'], user['first_name'], user['last_name'], 'sample_ulr', dbi=self.dbi)
