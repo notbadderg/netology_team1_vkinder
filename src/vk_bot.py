@@ -3,10 +3,10 @@ from src.db.db_interface import DatabaseInterface
 
 
 class VkBot:
-    def __init__(self, tokens, db_config):
+    def __init__(self, vk_config, db_config):
         DataClassesDBI.dbi = DatabaseInterface(db_config)
-        self.group_token = tokens.group_token
-        self.user_token = tokens.user_token
+        self.group_token = vk_config.group_token
+        self.user_token = vk_config.user_token
 
     def start(self):
         #########
