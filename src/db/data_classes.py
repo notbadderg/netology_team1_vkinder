@@ -22,10 +22,10 @@ class TargetsList:
     def __init__(self, client_vk_id: int, dbi=None):
         self.client_vk_id = client_vk_id
         self.targets = []
-        self.cursor = -1
         self.dbi = dbi
 
     def __iter__(self):
+        self.cursor = -1
         return self
 
     def __next__(self):
