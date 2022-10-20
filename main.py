@@ -1,12 +1,12 @@
-from config import DatabaseConfig, VkTokensList
+from config import DatabaseConfig, VkConfig
 from src.vk_bot import VkBot
 
 
 def main():
     db_cfg = DatabaseConfig()
-    tokens = VkTokensList()
+    vk_cfg = VkConfig()
 
-    vkb = VkBot(tokens, db_cfg)
+    vkb = VkBot(vk_cfg, db_cfg)
     vkb.start()
 
 
