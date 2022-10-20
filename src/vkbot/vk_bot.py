@@ -1,10 +1,11 @@
-from vkbot.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
-from vkbot.db.db_interface import DatabaseInterface
-
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
+
+from vkbot.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
+from vkbot.db.db_interface import DatabaseInterface
+
 
 class VkBot():
     def __init__(self, vk_config, db_config):
@@ -35,7 +36,6 @@ class VkBot():
         return keyboard.get_keyboard()
 
     def get_main_menu(self):
-
         """ Основное меню """
 
         keyboard = VkKeyboard(one_time=True)
@@ -87,9 +87,6 @@ class VkBot():
         }
 
         resp = self.user_api.users.search(**params)
-        # print(resp)
-        
-
 
         return resp
 
@@ -110,15 +107,13 @@ class VkBot():
     def get_photos_by_owner_id(self, owner_id, album_id='profile', extended=1):
         """ Получить фото по id пользователя """
 
-
         params = {
             'owner_id': owner_id,
             'album_id': album_id,
             'extended': extended
         }
-
         resp = self.user_api.photos.get(**params)
-        # print(resp)
+
         return resp
 
     def get_photo_link(self, user_id):
@@ -128,10 +123,7 @@ class VkBot():
         for i, item in enumerate(sorted(photo['items'], key=lambda photo: photo['likes']['count'], reverse=True)):
             media_id = item['id']
             owner_id = item['owner_id']
-            # result.append(f'photo{owner_id}_{media_id}')
-            result.append((media_id, owner_id))
-
-            # result.append(result.append(f'photo{owner_id}_{media_id}'))
+            result.append((media_id, owner_id, f'photo{owner_id}_{media_id}'))
             if i == 2:
                 return result
 
@@ -147,42 +139,67 @@ class VkBot():
                             user['last_name'],
                             f'https://vk.com/id{user["id"]}')
 
-
-            # print(self.get_photo_link(target.vk_id))
-
-            for photo_id, target_vk_id in self.get_photo_link(target.vk_id):
-                target.photos.append(Photo(photo_id, target_vk_id))
+            for photo_id, target_vk_id, photo_link in self.get_photo_link(target.vk_id):
+                target.photos.append(Photo(photo_id, target_vk_id, photo_link))
             targets.append(target)
 
-        # print(targets)
-        for target in targets:
-            target.add_favorite(client_vk_id)
+        # for target in targets:
+        #     target.add_favorite(client_vk_id)
 
-        favorites = targets.get_favorites()
-        for fav in favorites:
-            print(fav.first_name)
-        return targets
+        # for fav in targets.get_favorites():
+        #     print(fav.first_name)
+        return iter(targets)
 
-    def user_generator(self, users):
-        for user in users:
-            if user['is_closed']:
-                continue
-            name = f'{user["first_name"]} {user["last_name"]}'
-            ref = f'https://vk.com/id{user["id"]}'
-            photo_link = self.get_photo_link(user["id"])
-            # print('*'*100)
-            # print(name, ref, photo_link)
-            # print('*'*100)
+    def search_start_state(self, event, current_user):
+        start_menu = self.get_start_menu()
+        restart_menu = self.get_restart_menu()
 
-            yield name + '\n' + ref
-            yield photo_link
+        user_info = self.get_user_info(event.obj.message['from_id'], fields='bdate, sex, city')
+
+        if 'city' in user_info:
+            self.city = user_info['city']['id']
+        else:
+            self.city = None
+            self.send_message(current_user, 'Кажется, у вас не указан город!')
+
+        if user_info['sex'] == 1:
+            self.sex = 2
+        elif user_info['sex'] == 2:
+            self.sex = 1
+        else:
+            self.send_message(current_user, 'Кажется, у вас не указан пол!')
+
+        if 'bdate' in user_info and len(user_info['bdate'].split('.')) == 3:
+            self.birth_year = user_info['bdate'].split('.')[2]
+        else:
+            self.birth_year = None
+            self.send_message(current_user, 'Кажется, у вас не указан год рождения!')                     
+
+        if self.city is None or self == 0 or self.birth_year is None:
+            self.send_message(current_user, 'Измените настройки профиля и перезапустите бота!', keyboard=restart_menu)
+        else:
+            self.send_message(current_user, f'Ваш город (city_id): {self.city}')
+            self.send_message(current_user, f'Ваш пол: {"мужской" if self.sex == 1 else "женский"}')
+            self.send_message(current_user, f'Ваш год рождения: {self.birth_year}')
+            self.send_message(current_user, 'Давай знакомиться? Начни поиск!', keyboard=start_menu)
+            return True
+
+    def search_active_state(self, current_user):
+        main_menu = self.get_main_menu()  
+        self.send_message(current_user, 'Поиск запущен...', keyboard=main_menu)
+        users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city')
+        self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
+        target = next(self.targets)
+        message = f'{target.first_name} {target.last_name}\n{target.url}'
+        attachment = ",".join([photo.photo_link for photo in target.photos])
+        self.send_message(current_user, message, attachment)
 
     def _listener(self):
         """ https://vk.com/dev/bots_longpoll """
-        start_menu = self.get_start_menu()
-        main_menu = self.get_main_menu()
-        restart_menu = self.get_restart_menu()
+
+        search_start_flag = False
         stop_menu = self.get_stop_menu()
+        main_menu = self.get_main_menu() 
         
         for event in self.longpoll.listen():            
             if event.type == VkBotEventType.MESSAGE_NEW:
@@ -190,50 +207,18 @@ class VkBot():
                 current_message = event.obj.message['text']
 
                 if current_message == 'Начать' or current_message == 'Перезапустить бота':
-                    user_info = self.get_user_info(event.obj.message['from_id'], fields='bdate, sex, city')
-
-                    if 'city' in user_info:
-                        city = user_info['city']['id']
-                    else:
-                        city = None
-                        self.send_message(current_user, 'Кажется, у вас не указан город!')
-
-                    if user_info['sex'] == 1:
-                        sex = 2
-                    elif user_info['sex'] == 2:
-                        sex = 1
-                    else:
-                        self.send_message(current_user, 'Кажется, у вас не указан пол!')
-
-                    if 'bdate' in user_info and len(user_info['bdate'].split('.')) == 3:
-                        birth_year = user_info['bdate'].split('.')[2]
-                    else:
-                        birth_year = None
-                        self.send_message(current_user, 'Кажется, у вас не указан год рождения!')                     
-
-                    if city is None or self == 0 or birth_year is None:
-                        self.send_message(current_user, 'Измените настройки профиля и перезапустите бота!', keyboard=restart_menu)
-                    else:
-                        self.send_message(current_user, f'Ваш город (city_id): {city}')
-                        self.send_message(current_user, f'Ваш пол: {"мужской" if sex == 1 else "женский"}')
-                        self.send_message(current_user, f'Ваш год рождения: {birth_year}')
-                        self.send_message(current_user, 'Давай знакомиться? Начни поиск!', keyboard=start_menu)
-
-                elif current_message == 'Начать поиск':
-                    self.send_message(current_user, 'Поиск запущен...', keyboard=main_menu)
-                    users = self.find_users(birth_year, sex, city, fields='bdate, sex, city')
-                    self.create_obj(
-                            current_user, 
-                            imitation_users_list_from_api=users
-                        )
-                    user_gen = self.user_generator(users['items'])
-                    self.send_message(current_user, f'{next(user_gen)}', f'{",".join(next(user_gen))}')
-                elif current_message == 'Продолжить поиск':
+                    search_start_flag = self.search_start_state(event, current_user)
+                elif current_message == 'Начать поиск' and search_start_flag:
+                    self.search_active_state(current_user)
+                elif current_message == 'Продолжить поиск' and search_start_flag:
                     self.send_message(current_user, 'Продолжаю поиск...', keyboard=main_menu)
-                    self.send_message(current_user, f'{next(user_gen)}', f'{",".join(next(user_gen))}')
-                elif current_message == 'Добавить в избранное':
+                    target = next(self.targets)
+                    message = f'{target.first_name} {target.last_name}\n{target.url}'
+                    attachment = ",".join([photo.photo_link for photo in target.photos])                    
+                    self.send_message(current_user, message, attachment)
+                elif current_message == 'Добавить в избранное' and search_start_flag:
                     self.send_message(current_user, 'Данные обновлены', keyboard=main_menu)
-                elif current_message == 'Показать избранное':
+                elif current_message == 'Показать избранное' and search_start_flag:
                     self.send_message(current_user, 'Избранное:', keyboard=main_menu)
                 elif current_message == 'Остановить бота':
                     self.send_message(current_user, 'Бот остановлен', keyboard=stop_menu)                    
