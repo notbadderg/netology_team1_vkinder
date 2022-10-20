@@ -1,8 +1,8 @@
 import sqlalchemy as sq
 import sqlalchemy.exc
 from sqlalchemy.orm import Session
-from src.vkbot.db.models import create_tables as ct, FavoriteTable, TargetTable, PhotoTable
-from src.vkbot.db.data_classes import Target, Photo
+from .models import create_tables as ct, FavoriteTable, TargetTable, PhotoTable
+from .data_classes import Target, Photo
 
 
 class DatabaseInterface:
@@ -13,8 +13,9 @@ class DatabaseInterface:
         self.user = db_cfg.user
         self.name = db_cfg.name
         self.launch_drop = db_cfg.launch_drop
-
-        self.engine = sq.create_engine(self._make_dsn(), echo=db_cfg.echo)
+        self.echo_creating = db_cfg.echo_creating
+        self.echo_queries = db_cfg.echo_queries
+        self.engine = sq.create_engine(self._make_dsn(), echo=self.echo_creating)
         self.create_table()
 
     def _make_dsn(self) -> str:
@@ -25,7 +26,7 @@ class DatabaseInterface:
         return f"{driver}{credentials}@{address}/{db_name}"
 
     def create_table(self):
-        db_meta = ct(self.engine, self.launch_drop)
+        db_meta = ct(self.engine, self.launch_drop, self.echo_queries)
         return db_meta.tables
 
     def add_to_favorite(self, target, client_vk_id: int) -> bool:
@@ -40,7 +41,8 @@ class DatabaseInterface:
                                     target_vk_id=target.vk_id))
                 for photo in target.photos:
                     s.add(PhotoTable(photo_id=photo.photo_id,
-                                     target_vk_id=photo.target_vk_id))
+                                     target_vk_id=photo.target_vk_id,
+                                     photo_link=photo.photo_link))
             except sqlalchemy.exc.DataError or sqlalchemy.exc.DatabaseError:
                 s.rollback()
             else:
@@ -62,6 +64,9 @@ class DatabaseInterface:
                 statement_2 = sq.select(PhotoTable).filter_by(target_vk_id=temp_target.vk_id)
                 temp_photos_list = s.scalars(statement_2).all()
                 for photo in temp_photos_list:
-                    temp_target.photos.append(Photo(photo_id=photo.photo_id, target_vk_id=photo.target_vk_id))
+                    print(type(photo))
+                    temp_target.photos.append(Photo(photo_id=photo.photo_id,
+                                                    target_vk_id=photo.target_vk_id,
+                                                    photo_link=photo.photo_link))
                 favorites_list.append(temp_target)
         return favorites_list

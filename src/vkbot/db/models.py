@@ -26,13 +26,16 @@ class PhotoTable(Base):
     photo_id = sq.Column(sq.TEXT, nullable=False)
     target_vk_id = sq.Column(sq.Integer, sq.ForeignKey("target.vk_id"), nullable=False)
     target = relationship(TargetTable, backref="photos")
+    photo_link = sq.Column(sq.TEXT, nullable=False)
     c2 = sq.PrimaryKeyConstraint(photo_id, target_vk_id)
 
 
-def create_tables(engine, launch_drop):
+def create_tables(engine, launch_drop, echo):
     if launch_drop:
         Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    # For activating engine echo AFTER creating tables.
+    engine.echo = echo
     return Base.metadata
 
 

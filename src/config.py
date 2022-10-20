@@ -1,5 +1,4 @@
 import os
-from tokenize import group
 from dotenv import find_dotenv, load_dotenv
 
 
@@ -15,7 +14,8 @@ class DatabaseConfig(Config):
         self.user = os.getenv('DB_USER')
         self.password = os.getenv('DB_PASSWORD')
         self.launch_drop = _str_to_bool_convert(os.getenv('DB_DROP_TABLES_AFTER_LAUNCH'))
-        self.echo = _str_to_bool_convert(os.getenv('DB_ECHO'))
+        self.echo_creating = _str_to_bool_convert(os.getenv('DB_ECHO_CREATING_TABLES'))
+        self.echo_queries = _str_to_bool_convert(os.getenv('DB_ECHO_QUERIES'))
 
 
 class VkConfig(Config):

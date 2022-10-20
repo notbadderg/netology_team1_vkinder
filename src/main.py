@@ -1,5 +1,5 @@
 from config import DatabaseConfig, VkConfig
-from src.vkbot.vk_bot import VkBot
+from vkbot.vk_bot import VkBot
 
 
 def main():
