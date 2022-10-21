@@ -19,9 +19,9 @@ class DatabaseInterface(DatabaseConfig):
             with conn.cursor() as curs:
                 if self.launch_drop:
                     curs.execute("""
-                                    DROP TABLE IF EXISTS target CASCADE;
-                                    DROP TABLE IF EXISTS favorite CASCADE;
-                                    DROP TABLE IF EXISTS client CASCADE;
+                                    DROP TABLE favorite;
+                                    DROP TABLE photo;
+                                    DROP TABLE target;
                     """)
                 curs.execute(TABLES)
                 return None
@@ -80,15 +80,15 @@ class DatabaseInterface(DatabaseConfig):
                                         WHERE f.target_vk_id IS NULL)
                     RETURNING t.vk_id;
                 """)
-                curs.execute("""
-                    DELETE FROM photo AS p
-                     WHERE p.target_vk_id IN (SELECT p.target_vk_id
-                                         FROM photo AS p
-                                              LEFT JOIN target AS t
-                                                     ON t.vk_id = p.target_vk_id
-                                        WHERE t.vk_id IS NULL)
-                    RETURNING p.target_vk_id;
-                """)
+                # curs.execute("""
+                #     DELETE FROM photo AS p
+                #      WHERE p.target_vk_id IN (SELECT p.target_vk_id
+                #                          FROM photo AS p
+                #                               LEFT JOIN target AS t
+                #                                      ON t.vk_id = p.target_vk_id
+                #                         WHERE t.vk_id IS NULL)
+                #     RETURNING p.target_vk_id;
+                # """)
         return result
 
     def get_client_favorites_list(self, client_vk_id: int) -> list:
