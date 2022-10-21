@@ -59,7 +59,6 @@ class DatabaseInterface(DatabaseConfig):
             return True
         return False
 
-
     def remove_favorite(self, target: Target, client_vk_id: int) -> bool:
         result = False
         with self.db_conn as conn:
