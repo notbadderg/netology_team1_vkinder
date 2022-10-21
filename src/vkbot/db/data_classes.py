@@ -21,6 +21,10 @@ class Target(DataClassesDBI):
         result = self.dbi.add_to_favorite(self, client_vk_id)
         return result
 
+    def remove_favorite(self, client_vk_id: int):
+        result = self.dbi.remove_favorite(self, client_vk_id)
+        return result
+
 
 class TargetsList(DataClassesDBI):
     def __init__(self, client_vk_id: int):

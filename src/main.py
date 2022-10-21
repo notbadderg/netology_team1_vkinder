@@ -3,10 +3,9 @@ from vkbot.vk_bot import VkBot
 
 
 def main():
-    db_cfg = DatabaseConfig()
     vk_cfg = VkConfig()
 
-    vkb = VkBot(vk_cfg, db_cfg)
+    vkb = VkBot(vk_cfg)
     vkb.start()
 
 
