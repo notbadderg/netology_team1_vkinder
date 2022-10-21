@@ -39,6 +39,7 @@ class VkBot():
         self.start_menu = self.get_start_menu()
         self.restart_menu = self.get_restart_menu()        
         self.main_menu = self.get_main_menu()
+        self.stop_menu = self.get_stop_menu()
 
     def get_start_menu(self):
         """ Начальное меню """
