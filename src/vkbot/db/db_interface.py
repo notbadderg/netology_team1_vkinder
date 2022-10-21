@@ -1,5 +1,5 @@
 import psycopg2
-from src.config import DatabaseConfig
+from config import DatabaseConfig
 from .db_tables import TABLES
 from .data_classes import Target, Photo
 
