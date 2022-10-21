@@ -8,8 +8,8 @@ from vkbot.db.db_interface import DatabaseInterface
 
 
 class VkBot():
-    def __init__(self, vk_config, db_config):
-        DataClassesDBI.dbi = DatabaseInterface(db_config)      
+    def __init__(self, vk_config):
+        DataClassesDBI.dbi = DatabaseInterface()
         self._create_group_session(vk_config.group_token, vk_config.group_id)
         self._create_user_session(vk_config.user_token)
         self._init_current_user_param()

@@ -11,13 +11,15 @@ class TargetTable(Base):
     first_name = sq.Column(sq.VARCHAR(length=50), nullable=False)
     last_name = sq.Column(sq.VARCHAR(length=50), nullable=False)
     url = sq.Column(sq.TEXT, nullable=False)
+    favorite = relationship("FavoriteTable", back_populates="target")
+    photo = relationship("PhotoTable", backref="targets", cascade="all,delete")
 
 
 class FavoriteTable(Base):
     __tablename__ = "favorite"
     client_vk_id = sq.Column(sq.Integer, nullable=False)
     target_vk_id = sq.Column(sq.Integer, sq.ForeignKey("target.vk_id"), nullable=False)
-    target = relationship(TargetTable, backref="favorites")
+    target = relationship("TargetTable", back_populates="favorite", single_parent="True", cascade="all,delete")
     c3 = sq.PrimaryKeyConstraint(client_vk_id, target_vk_id)
 
 
@@ -25,7 +27,7 @@ class PhotoTable(Base):
     __tablename__ = "photo"
     photo_id = sq.Column(sq.TEXT, nullable=False)
     target_vk_id = sq.Column(sq.Integer, sq.ForeignKey("target.vk_id"), nullable=False)
-    target = relationship(TargetTable, backref="photos")
+    target = relationship("TargetTable", backref='targets', cascade='all,delete')
     photo_link = sq.Column(sq.TEXT, nullable=False)
     c2 = sq.PrimaryKeyConstraint(photo_id, target_vk_id)
 
