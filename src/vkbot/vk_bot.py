@@ -21,6 +21,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.birth_year = None
         self.targets = None
         self.curent_target = None
+        self.find_offset = 0
 
     def create_obj(self, client_vk_id, imitation_users_list_from_api):
         targets = TargetsList(client_vk_id=client_vk_id)
@@ -85,7 +86,13 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
 
     def search_continue_state(self, current_user):
         self.send_message(current_user, 'Продолжаю поиск...', keyboard=self.main_menu)
-        target = next(self.targets)
+        try:
+            target = next(self.targets)
+        except StopIteration:
+            self.find_offset +=15
+            users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city', offset=self.find_offset)
+            self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
+            target = next(self.targets)            
         self.curent_target = target
         message = f'{target.first_name} {target.last_name}\n{target.url}'
         attachment = ",".join([photo.photo_link for photo in target.photos])                    
