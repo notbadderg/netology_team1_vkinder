@@ -1,72 +1,115 @@
-import sqlalchemy as sq
-import sqlalchemy.exc
-from sqlalchemy.orm import Session
-from .models import create_tables as ct, FavoriteTable, TargetTable, PhotoTable
+import psycopg2
+from config import DatabaseConfig
+from .db_tables import TABLES
 from .data_classes import Target, Photo
 
 
-class DatabaseInterface:
-    def __init__(self, db_cfg):
-        self.host = db_cfg.host
-        self.port = db_cfg.port
-        self.password = db_cfg.password
-        self.user = db_cfg.user
-        self.name = db_cfg.name
-        self.launch_drop = db_cfg.launch_drop
-        self.echo_creating = db_cfg.echo_creating
-        self.echo_queries = db_cfg.echo_queries
-        self.engine = sq.create_engine(self._make_dsn(), echo=self.echo_creating)
-        self.create_table()
+class DatabaseInterface(DatabaseConfig):
+    def __init__(self):
+        super().__init__()
+        self.db_conn = psycopg2.connect(host=self.host,
+                                        port=self.port,
+                                        dbname=self.dbname,
+                                        user=self.user,
+                                        password=self.password)
+        self._create_table()
 
-    def _make_dsn(self) -> str:
-        driver = "postgresql://"
-        credentials = f"{self.user}:{self.password}"
-        address = f"{self.host}:{self.port}"
-        db_name = self.name
-        return f"{driver}{credentials}@{address}/{db_name}"
+    def _create_table(self):
+        with self.db_conn as conn:
+            with conn.cursor() as curs:
+                if self.launch_drop:
+                    curs.execute("""
+                                    DROP TABLE favorite;
+                                    DROP TABLE photo;
+                                    DROP TABLE target;
+                    """)
+                curs.execute(TABLES)
+                return None
 
-    def create_table(self):
-        db_meta = ct(self.engine, self.launch_drop, self.echo_queries)
-        return db_meta.tables
-
-    def add_to_favorite(self, target, client_vk_id: int) -> bool:
-        is_committed = False
-        with Session(self.engine) as s:
-            try:
-                s.add(TargetTable(vk_id=target.vk_id,
-                                  first_name=target.first_name,
-                                  last_name=target.last_name,
-                                  url=target.url))
-                s.add(FavoriteTable(client_vk_id=client_vk_id,
-                                    target_vk_id=target.vk_id))
+    def add_to_favorite(self, target: Target, client_vk_id: int):
+        with self.db_conn as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                    INSERT INTO target (vk_id, first_name, last_name, url)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING
+                    RETURNING vk_id;
+                """, (target.vk_id, target.first_name, target.last_name, target.url))
                 for photo in target.photos:
-                    s.add(PhotoTable(photo_id=photo.photo_id,
-                                     target_vk_id=photo.target_vk_id,
-                                     photo_link=photo.photo_link))
-            except sqlalchemy.exc.DataError or sqlalchemy.exc.DatabaseError:
-                s.rollback()
-            else:
-                try:
-                    s.commit()
-                except sqlalchemy.exc.IntegrityError:
-                    s.rollback()
-                else:
-                    is_committed = True
-        return is_committed
+                    curs.execute("""
+                        INSERT INTO photo (photo_id, target_vk_id, photo_link)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT DO NOTHING;
+                    """, (photo.photo_id, photo.target_vk_id, photo.photo_link))
+
+                curs.execute("""
+                    INSERT INTO favorite (client_vk_id, target_vk_id)
+                    VALUES (%s, %s)
+                    ON CONFLICT DO NOTHING
+                    RETURNING client_vk_id, target_vk_id;
+                """, (client_vk_id, target.vk_id))
+
+                curs.execute("""
+                    SELECT client_vk_id, target_vk_id 
+                      FROM favorite
+                     WHERE (client_vk_id=%s AND target_vk_id=%s);
+                """, (client_vk_id, target.vk_id))
+                result = curs.fetchall()
+        if result[0][0] == client_vk_id and result[0][1] == target.vk_id:
+            return True
+        return False
+
+    def remove_favorite(self, target: Target, client_vk_id: int) -> bool:
+        result = False
+        with self.db_conn as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                    DELETE FROM favorite
+                     WHERE (client_vk_id=%s AND target_vk_id=%s)
+                    RETURNING client_vk_id;
+                """, (client_vk_id, target.vk_id))
+                if curs.fetchall():
+                    result = True
+
+                curs.execute("""
+                    DELETE FROM target AS t
+                     WHERE t.vk_id IN (SELECT t.vk_id
+                                         FROM target AS t
+                                              LEFT JOIN favorite AS f
+                                                     ON t.vk_id = f.target_vk_id
+                                        WHERE f.target_vk_id IS NULL)
+                    RETURNING t.vk_id;
+                """)
+                # curs.execute("""
+                #     DELETE FROM photo AS p
+                #      WHERE p.target_vk_id IN (SELECT p.target_vk_id
+                #                          FROM photo AS p
+                #                               LEFT JOIN target AS t
+                #                                      ON t.vk_id = p.target_vk_id
+                #                         WHERE t.vk_id IS NULL)
+                #     RETURNING p.target_vk_id;
+                # """)
+        return result
 
     def get_client_favorites_list(self, client_vk_id: int) -> list:
-        with Session(self.engine) as s:
-            statement_1 = sq.select(TargetTable).join(FavoriteTable).filter_by(client_vk_id=client_vk_id)
-            rows = s.scalars(statement_1).all()
-            favorites_list = []
-            for row in rows:
-                temp_target = Target(row.vk_id, row.first_name, row.last_name, row.url)
-                statement_2 = sq.select(PhotoTable).filter_by(target_vk_id=temp_target.vk_id)
-                temp_photos_list = s.scalars(statement_2).all()
-                for photo in temp_photos_list:
-                    print(type(photo))
-                    temp_target.photos.append(Photo(photo_id=photo.photo_id,
-                                                    target_vk_id=photo.target_vk_id,
-                                                    photo_link=photo.photo_link))
-                favorites_list.append(temp_target)
+        with self.db_conn as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                SELECT t.vk_id, t.first_name, t.last_name, t.url 
+                 FROM target AS t 
+                        JOIN favorite AS f 
+                          ON t.vk_id = f.target_vk_id 
+                WHERE f.client_vk_id = %s
+                """, (client_vk_id,))
+                favorites_list = []
+                for a, b, c, d in curs.fetchall():
+                    target = Target(a, b, c, d)
+                    curs.execute("""
+                        SELECT p.photo_id, p.target_vk_id, p.photo_link
+                          FROM photo AS p
+                         WHERE p.target_vk_id = %s
+                    """, (target.vk_id,))
+                    for e, f, g in curs.fetchall():
+                        target.photos.append(Photo(e, f, g))
+                    favorites_list.append(target)
         return favorites_list
