@@ -117,10 +117,14 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
     @logger()
     def show_fav_state(self, current_user):
         self.send_message(current_user, 'Избранное:', keyboard=self.main_menu)
-        for fav in self.targets.get_favorites():
-            message = f'{fav.first_name} {fav.last_name}\n{fav.url}'
-            attachment = ",".join([photo.photo_link for photo in fav.photos])
-            self.send_message(current_user, message, attachment, keyboard=self.main_menu)
+        favorites = self.targets.get_favorites()
+        if len(favorites) == 0:
+            self.send_message(current_user, 'Список пока пуст.', keyboard=self.start_menu)
+        else:
+            for fav in favorites:
+                message = f'{fav.first_name} {fav.last_name}\n{fav.url}'
+                attachment = ",".join([photo.photo_link for photo in fav.photos])
+                self.send_message(current_user, message, attachment, keyboard=self.main_menu)
         self.current_menu = self.main_menu
 
     @logger()
