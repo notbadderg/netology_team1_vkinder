@@ -16,7 +16,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self._init_menu()
         self.current_menu = None
         # Init current user params:
-        self.city = 3
+        self.city = None
         self.sex = None
         self.birth_year = None
         self.targets = None
