@@ -1,10 +1,10 @@
 from vk_api.bot_longpoll import VkBotEventType
-
 from .vk_group_api import VkGroupApi
 from .vk_user_api import VkUserApi
 from .vk_menu_api import VkMenuApi
 from .db.data_classes import DataClassesDBI, Photo, Target, TargetsList
 from .db.db_interface import DatabaseInterface
+from .utils.logger import logger
 
 
 class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
@@ -23,6 +23,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.current_target = None
         self.find_offset = 0
 
+    @logger()
     def create_obj(self, client_vk_id, imitation_users_list_from_api):
         targets = TargetsList(client_vk_id=client_vk_id)
         for user in imitation_users_list_from_api['items']:
@@ -38,7 +39,8 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             targets.append(target)
 
         return iter(targets)
-        
+
+    @logger()
     def check_user_info(self, current_user, user_info):
         if 'city' in user_info:
             self.city = user_info['city']['id']
@@ -55,8 +57,9 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         if 'bdate' in user_info and len(user_info['bdate'].split('.')) == 3:
             self.birth_year = user_info['bdate'].split('.')[2]
         else:
-            self.send_message(current_user, 'Кажется, у вас не указан год рождения!')  
+            self.send_message(current_user, 'Кажется, у вас не указан год рождения!')
 
+    @logger()
     def search_start_state(self, event, current_user):
         user_info = self.get_user_info(event.obj.message['from_id'], fields='bdate, sex, city')
 
@@ -74,6 +77,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             self.current_menu = self.start_menu
             return True
 
+    @logger()
     def search_active_state(self, current_user):
         self.send_message(current_user, 'Поиск запущен...')
         users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city')
@@ -85,6 +89,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.send_message(current_user, message, attachment, keyboard=self.main_menu)
         self.current_menu = self.main_menu
 
+    @logger()
     def search_continue_state(self, current_user):
         self.send_message(current_user, 'Продолжаю поиск...', keyboard=self.main_menu)
         try:
@@ -103,11 +108,13 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.send_message(current_user, message, attachment)
         self.current_menu = self.main_menu
 
+    @logger()
     def add_fav_state(self, current_user):
         self.current_target.add_favorite(current_user)
         self.send_message(current_user, 'Данные обновлены', keyboard=self.main_menu)
         self.current_menu = self.main_menu
 
+    @logger()
     def show_fav_state(self, current_user):
         self.send_message(current_user, 'Избранное:', keyboard=self.main_menu)
         for fav in self.targets.get_favorites():
@@ -116,10 +123,12 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             self.send_message(current_user, message, attachment, keyboard=self.main_menu)
         self.current_menu = self.main_menu
 
+    @logger()
     def stop_state(self, current_user):
         self.send_message(current_user, 'Бот остановлен', keyboard=self.stop_menu)
         self.current_menu = self.stop_menu
 
+    @logger()
     def incorrect_command_state(self, current_user):
         self.send_message(current_user, 'Введите корректную команду!', keyboard=self.current_menu)
 

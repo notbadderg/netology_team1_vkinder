@@ -1,5 +1,5 @@
 import vk_api
-
+from .utils.logger import logger
 
 class VkUserApi:
     def __init__(self, vk_config):
@@ -11,6 +11,7 @@ class VkUserApi:
         self.user_session = vk_api.VkApi(token=token)
         self.user_api = self.user_session.get_api()
 
+    @logger()
     def find_users(self, birth_year=None, sex=None, city=None, fields=None, offset=0):
         """ Ищет пользователей по указанному фильтру """
 
@@ -27,6 +28,7 @@ class VkUserApi:
 
         return resp
 
+    @logger()
     def get_photos_by_owner_id(self, owner_id, album_id='profile', extended=1):
         """ Получить фото по id пользователя """
 
@@ -39,6 +41,7 @@ class VkUserApi:
 
         return resp
 
+    @logger()
     def get_photo_link(self, user_id):
         """ Получить ссылку на фото по id пользователя """
         

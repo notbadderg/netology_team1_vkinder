@@ -1,7 +1,7 @@
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
-
+from .utils.logger import logger
 
 class VkGroupApi:
     def __init__(self, vk_config):
@@ -14,6 +14,7 @@ class VkGroupApi:
         self.long_poll = VkBotLongPoll(self.group_session, group_id)
         self.group_api = self.group_session.get_api()
 
+    @logger()
     def get_user_info(self, user_id, fields=None):
         """ Получает информацию о пользователе """
 
@@ -25,6 +26,7 @@ class VkGroupApi:
 
         return resp[0]
 
+    @logger()
     def send_message(self, user_id, text, attachment=None, keyboard=None):
         """ Отправляет сообщение пользователю """
 
