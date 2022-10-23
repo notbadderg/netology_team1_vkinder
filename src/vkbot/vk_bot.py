@@ -175,7 +175,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
 
         for event in self.long_poll.listen():
 
-            # If online clients > 1 then outdated user will be "disconnected"
+            # If "online" clients > 1 then outdated user will be "disconnected"
             now = datetime.datetime.now()
             if len(self.clients.keys()) > 1:
                 clients_vk_ids = list(self.clients.keys())
