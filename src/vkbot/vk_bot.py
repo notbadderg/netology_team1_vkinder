@@ -7,6 +7,20 @@ from .db.db_interface import DatabaseInterface
 from .utils.logger import logger
 
 
+class Client:
+    def __init__(self, vk_id, current_message):
+        self.vk_id = vk_id
+        self.city = None
+        self.sex = None
+        self.birth_year = None
+        self.targets = None
+        self.current_target = None
+        self.current_menu = None
+        self.current_message = current_message
+        self.find_offset = 0
+        self.search_start_flag = False
+
+
 class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
     def __init__(self, vk_config, db_config):
         super().__init__(vk_config)
@@ -14,28 +28,18 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self._create_group_session(vk_config.group_token, vk_config.group_id)
         self._create_user_session(vk_config.user_token)
         self._init_menu()
-        self.current_menu = None
-        # Init current user params:
-        self.city = None
-        self.sex = None
-        self.birth_year = None
-        self.targets = None
-        self.current_target = None
-        self.find_offset = 0
+        self.clients = {}
 
     @logger()
     def create_obj(self, client_vk_id, users_list_from_api):
         targets = TargetsList(client_vk_id=client_vk_id)
         for user in users_list_from_api['items']:
             if user['is_closed']:
-                continue    
+                continue
             target = Target(user['id'],
                             user['first_name'],
                             user['last_name'],
                             f'https://vk.com/id{user["id"]}')
-
-            # for photo_id, target_vk_id, photo_link in self.get_photo_link(target.vk_id):
-            #     target.photos.append(Photo(photo_id, target_vk_id, photo_link))
             targets.append(target)
 
         return iter(targets)
@@ -48,7 +52,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         return temp_photos_list
 
     @logger()
-    def check_user_info(self, current_user, user_info):
+    def check_user_info(self, current_client, user_info):
         if 'city' in user_info:
             self.city = user_info['city']['id']
         else:
@@ -67,25 +71,26 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             self.send_message(current_user, 'Кажется, у тебя не указан год рождения!')
 
     @logger()
-    def search_start_state(self, event, current_user):
+    def search_start_state(self, event, current_client):
         user_info = self.get_user_info(event.obj.message['from_id'], fields='bdate, sex, city')
 
-        self.check_user_info(current_user, user_info)           
+        self.check_user_info(current_user, user_info)
 
         if not (self.city and self.sex and self.birth_year):
             self.send_message(current_user, 'Измени настройки профиля и перезапусти бота!',
                               keyboard=self.restart_menu)
-            self.current_menu = self.restart_menu
+            self.clients[current_client].current_menu = self.restart_menu
+            return False
         else:
             self.send_message(current_user, f'Твой город (city_id): {self.city}')
             self.send_message(current_user, f'Твой пол: {"мужской" if self.sex == 1 else "женский"}')
             self.send_message(current_user, f'Твой год рождения: {self.birth_year}')
             self.send_message(current_user, 'Давай знакомиться? Начни поиск!', keyboard=self.start_menu)
-            self.current_menu = self.start_menu
+            self.clients[current_client].current_menu = self.start_menu
             return True
 
     @logger()
-    def search_active_state(self, current_user):
+    def search_active_state(self, current_client):
         self.send_message(current_user, 'Начинаем поиск...')
         users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city', offset=0, count=15)
         self.targets = self.create_obj(current_user, users_list_from_api=users)
@@ -95,7 +100,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         message = f'{target.first_name} {target.last_name}\n{target.url}'
         attachment = ",".join([photo.photo_link for photo in target.photos])
         self.send_message(current_user, message, attachment, keyboard=self.main_menu)
-        self.current_menu = self.main_menu
+        self.clients[current_client].current_menu = self.main_menu
 
     @logger()
     def search_continue_state(self, current_user):
@@ -120,7 +125,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         message = f'{target.first_name} {target.last_name}\n{target.url}'
         attachment = ",".join([photo.photo_link for photo in target.photos])
         self.send_message(current_user, message, attachment)
-        self.current_menu = self.main_menu
+        self.clients[current_client].current_menu = self.main_menu
 
         # def search_continue_state(self, current_user):
         #     self.send_message(current_user, 'Продолжаю поиск...', keyboard=self.main_menu)
@@ -144,25 +149,25 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
     def add_fav_state(self, current_user):
         self.current_target.add_favorite(current_user)
         self.send_message(current_user, 'Данные обновлены', keyboard=self.main_menu)
-        self.current_menu = self.main_menu
+        self.clients[current_client].current_menu = self.main_menu
 
     @logger()
-    def show_fav_state(self, current_user):
-        self.send_message(current_user, 'Избранное:', keyboard=self.main_menu)
+    def show_fav_state(self, current_client):
+        self.send_message(current_client, 'Избранное:', keyboard=self.main_menu)
         favorites = self.targets.get_favorites()
         if len(favorites) == 0:
-            self.send_message(current_user, 'Список пока пуст.', keyboard=self.start_menu)
+            self.send_message(current_client, 'Список пока пуст.', keyboard=self.start_menu)
         else:
             for fav in favorites:
                 message = f'{fav.first_name} {fav.last_name}\n{fav.url}'
                 attachment = ",".join([photo.photo_link for photo in fav.photos])
-                self.send_message(current_user, message, attachment, keyboard=self.main_menu)
-        self.current_menu = self.main_menu
+                self.send_message(current_client, message, attachment, keyboard=self.main_menu)
+        self.clients[current_client].current_menu = self.main_menu
 
     @logger()
-    def stop_state(self, current_user):
-        self.send_message(current_user, 'Бот остановлен', keyboard=self.stop_menu)
-        self.current_menu = self.stop_menu
+    def stop_state(self, current_client):
+        self.send_message(current_client, 'Бот остановлен', keyboard=self.stop_menu)
+        self.clients[current_client].current_menu = self.stop_menu
 
     @logger()
     def incorrect_command_state(self, current_user):
@@ -170,28 +175,34 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
 
     def _listener(self):
         """ https://vk.com/dev/bots_longpoll """
-        
-        search_start_flag = False
-        
+        self._show_active_users()
+
         for event in self.long_poll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
-                current_user = event.obj.message['from_id']
-                current_message = event.obj.message['text']
+                current_message = event.obj.message['from_id']
+                current_client = event.obj.message['text']
+                self.clients[current_client] = Client(current_client, current_message)
 
                 if current_message == 'Начать' or current_message == 'Перезапустить бота':
-                    search_start_flag = self.search_start_state(event, current_user)
-                elif current_message == 'Начать поиск' and search_start_flag:
-                    self.search_active_state(current_user)
-                elif current_message == 'Продолжить поиск' and search_start_flag:
-                    self.search_continue_state(current_user)
-                elif current_message == 'Добавить в избранное' and search_start_flag:
-                    self.add_fav_state(current_user)
-                elif current_message == 'Показать избранное' and search_start_flag:
-                    self.show_fav_state(current_user)
+                    self.clients[current_client].search_start_flag = self.search_start_state(event, current_client)
+                elif current_message == 'Начать поиск' and self.clients[current_client].search_start_flag:
+                    self.search_active_state(current_client)
+                elif current_message == 'Продолжить поиск' and self.clients[current_client].search_start_flag:
+                    self.search_continue_state(current_client)
+                elif current_message == 'Добавить в избранное' and self.clients[current_client].search_start_flag:
+                    self.add_fav_state(current_client)
+                elif current_message == 'Показать избранное' and self.clients[current_client].search_start_flag:
+                    self.show_fav_state(current_client)
                 elif current_message == 'Остановить бота':
-                    self.stop_state(current_user)
+                    self.stop_state(current_client)
                 else:
-                    self.incorrect_command_state(current_user)
+                    self.incorrect_command_state(current_client)
+
+    def _show_active_users(self):
+        print(f'ACTIVE USERS: {len(self.clients)}')
+        for n, client in enumerate(self.clients):
+            print(f'{n} - {client}', end='')
+        print()
 
     def start(self):
         self._listener()
