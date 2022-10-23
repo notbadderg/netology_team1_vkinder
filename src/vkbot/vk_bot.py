@@ -11,7 +11,7 @@ import datetime
 class Client:
     def __init__(self, vk_id, last_activity_time):
         self.vk_id = vk_id
-        self.city = 3
+        self.city = None
         self.sex = None
         self.birth_year = None
         self.targets = None
