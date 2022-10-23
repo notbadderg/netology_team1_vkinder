@@ -98,11 +98,10 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
     @logger()
     def search_active_state(self, current_client):
         self.send_message(current_client, 'Начинаем поиск...')
-        users = self.find_users(self.clients[current_client].birth_year,
-                                self.clients[current_client].sex,
-                                self.clients[current_client].city,
+        self.clients[current_client].find_offset = 0
+        users = self.find_users(self.clients[current_client],
                                 fields='bdate, sex, city',
-                                offset=0, count=15)
+                                count=15)                                
         self.clients[current_client].targets = self.create_obj(current_client, users_list_from_api=users)
         target = next(self.clients[current_client].targets)
         self.clients[current_client].current_target = target
@@ -118,11 +117,9 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         target = next(self.clients[current_client].targets)
         if target == 0:
             self.clients[current_client].find_offset += 15
-            users = self.find_users(self.clients[current_client].birth_year,
-                                    self.clients[current_client].sex, self.clients[current_client].city,
+            users = self.find_users(self.clients[current_client],
                                     fields='bdate, sex, city',
-                                    offset=self.clients[current_client].find_offset,
-                                    count=15)
+                                    count=15)            
             self.clients[current_client].targets = self.create_obj(current_client, users_list_from_api=users)
             if not self.clients[current_client].targets.targets:
                 self.send_message(current_client, 'Похоже, что больше никого нет.', keyboard=self.search_finish_menu)
@@ -174,7 +171,6 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         """ https://vk.com/dev/bots_longpoll """
 
         for event in self.long_poll.listen():
-
             # If online clients > 1 then outdated user will be "disconnected"
             now = datetime.datetime.now()
             if len(self.clients.keys()) > 1:
