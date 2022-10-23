@@ -24,9 +24,9 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.find_offset = 0
 
     @logger()
-    def create_obj(self, client_vk_id, imitation_users_list_from_api):
+    def create_obj(self, client_vk_id, users_list_from_api):
         targets = TargetsList(client_vk_id=client_vk_id)
-        for user in imitation_users_list_from_api['items']:
+        for user in users_list_from_api['items']:
             if user['is_closed']:
                 continue    
             target = Target(user['id'],
@@ -81,7 +81,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
     def search_active_state(self, current_user):
         self.send_message(current_user, 'Начинаем поиск...')
         users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city')
-        self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
+        self.targets = self.create_obj(current_user, users_list_from_api=users)
         target = next(self.targets)
         self.current_target = target
         message = f'{target.first_name} {target.last_name}\n{target.url}'
@@ -100,7 +100,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
                                     self.sex, self.city,
                                     fields='bdate, sex, city',
                                     offset=self.find_offset)
-            self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
+            self.targets = self.create_obj(current_user, users_list_from_api=users)
             target = next(self.targets)            
         self.current_target = target
         message = f'{target.first_name} {target.last_name}\n{target.url}'
