@@ -45,19 +45,19 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         if 'city' in user_info:
             self.city = user_info['city']['id']
         else:
-            self.send_message(current_user, 'Кажется, у вас не указан город!')
+            self.send_message(current_user, 'Кажется, у тебя не указан город!')
 
         if user_info['sex'] == 1:
             self.sex = 2
         elif user_info['sex'] == 2:
             self.sex = 1
         else:
-            self.send_message(current_user, 'Кажется, у вас не указан пол!')
+            self.send_message(current_user, 'Кажется, у тебя не указан пол!')
 
         if 'bdate' in user_info and len(user_info['bdate'].split('.')) == 3:
             self.birth_year = user_info['bdate'].split('.')[2]
         else:
-            self.send_message(current_user, 'Кажется, у вас не указан год рождения!')
+            self.send_message(current_user, 'Кажется, у тебя не указан год рождения!')
 
     @logger()
     def search_start_state(self, event, current_user):
@@ -66,20 +66,20 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.check_user_info(current_user, user_info)           
 
         if not (self.city and self.sex and self.birth_year):
-            self.send_message(current_user, 'Измените настройки профиля и перезапустите бота!',
+            self.send_message(current_user, 'Измени настройки профиля и перезапусти бота!',
                               keyboard=self.restart_menu)
             self.current_menu = self.restart_menu
         else:
-            self.send_message(current_user, f'Ваш город (city_id): {self.city}')
-            self.send_message(current_user, f'Ваш пол: {"мужской" if self.sex == 1 else "женский"}')
-            self.send_message(current_user, f'Ваш год рождения: {self.birth_year}')
+            self.send_message(current_user, f'Твой город (city_id): {self.city}')
+            self.send_message(current_user, f'Твой пол: {"мужской" if self.sex == 1 else "женский"}')
+            self.send_message(current_user, f'Твой год рождения: {self.birth_year}')
             self.send_message(current_user, 'Давай знакомиться? Начни поиск!', keyboard=self.start_menu)
             self.current_menu = self.start_menu
             return True
 
     @logger()
     def search_active_state(self, current_user):
-        self.send_message(current_user, 'Поиск запущен...')
+        self.send_message(current_user, 'Начинаем поиск...')
         users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city')
         self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
         target = next(self.targets)
@@ -130,7 +130,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
 
     @logger()
     def incorrect_command_state(self, current_user):
-        self.send_message(current_user, 'Введите корректную команду!', keyboard=self.current_menu)
+        self.send_message(current_user, 'Пожалуйса, введи корректную команду!', keyboard=self.current_menu)
 
     def _listener(self):
         """ https://vk.com/dev/bots_longpoll """

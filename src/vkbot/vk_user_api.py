@@ -1,6 +1,7 @@
 import vk_api
 from .utils.logger import logger
 
+
 class VkUserApi:
     def __init__(self, vk_config):
         self._create_user_session(vk_config.user_token)
