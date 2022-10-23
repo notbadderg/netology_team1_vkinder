@@ -20,7 +20,7 @@ class VkConfig(Config):
     group_id = os.getenv('VK_GROUP_ID')
     group_token = os.getenv('VK_GROUP_TOKEN')
     user_token = os.getenv('VK_USER_TOKEN')
-    client_timeout_sec = os.getenv('VK_CLIENT_TIMEOUT_SEC')
+    client_timeout_sec = int(os.getenv('VK_CLIENT_TIMEOUT_SEC'))
 
 
 def _str_to_bool_convert(string):
