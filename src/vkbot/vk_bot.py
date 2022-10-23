@@ -11,7 +11,7 @@ import datetime
 class Client:
     def __init__(self, vk_id, last_activity_time):
         self.vk_id = vk_id
-        self.city = 3
+        self.city = None
         self.sex = None
         self.birth_year = None
         self.targets = None
@@ -171,7 +171,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         """ https://vk.com/dev/bots_longpoll """
 
         for event in self.long_poll.listen():
-            # If online clients > 1 then outdated user will be "disconnected"
+            # If "online" clients > 1 then outdated user will be "disconnected"
             now = datetime.datetime.now()
             if len(self.clients.keys()) > 1:
                 clients_vk_ids = list(self.clients.keys())
