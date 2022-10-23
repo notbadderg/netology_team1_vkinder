@@ -7,6 +7,7 @@ from .db.db_interface import DatabaseInterface
 from .utils.logger import logger
 import datetime
 
+
 class Client:
     def __init__(self, vk_id, last_activity_time):
         self.vk_id = vk_id
@@ -30,7 +31,6 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.client_timeout_sec = vk_config.client_timeout_sec
         self._init_menu()
         self.clients = {}
-
 
     @logger()
     def create_obj(self, client_vk_id, users_list_from_api):
