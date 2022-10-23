@@ -3,7 +3,7 @@ from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
 
 
-class VkGroupApi():
+class VkGroupApi:
     def __init__(self, vk_config):
         self._create_group_session(vk_config.group_token, vk_config.group_id)
 
@@ -11,7 +11,7 @@ class VkGroupApi():
         """ Инициирует сессию с токеном группы  """
 
         self.group_session = vk_api.VkApi(token=group_token)
-        self.longpoll = VkBotLongPoll(self.group_session, group_id)
+        self.long_poll = VkBotLongPoll(self.group_session, group_id)
         self.group_api = self.group_session.get_api()
 
     def get_user_info(self, user_id, fields=None):

@@ -1,10 +1,11 @@
-from config import VkConfig
+from config import VkConfig, DatabaseConfig
 from vkbot.vk_bot import VkBot
 
 
 def main():
     vk_cfg = VkConfig()
-    vkb = VkBot(vk_cfg)
+    db_config = DatabaseConfig()
+    vkb = VkBot(vk_cfg, db_config)
     vkb.start()
 
 

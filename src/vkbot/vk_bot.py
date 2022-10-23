@@ -1,26 +1,26 @@
 from vk_api.bot_longpoll import VkBotEventType
 
-from vkbot.api.vk_group_api import VkGroupApi
-from vkbot.api.vk_user_api import VkUserApi
-from vkbot.api.vk_menu_api import VkMenuApi
-from vkbot.db.data_classes import DataClassesDBI, Photo, Target, TargetsList
-from vkbot.db.db_interface import DatabaseInterface
+from .vk_group_api import VkGroupApi
+from .vk_user_api import VkUserApi
+from .vk_menu_api import VkMenuApi
+from .db.data_classes import DataClassesDBI, Photo, Target, TargetsList
+from .db.db_interface import DatabaseInterface
 
 
 class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
-    def __init__(self, vk_config):
-        DataClassesDBI.dbi = DatabaseInterface()
+    def __init__(self, vk_config, db_config):
+        super().__init__(vk_config)
+        DataClassesDBI.dbi = DatabaseInterface(db_config)
         self._create_group_session(vk_config.group_token, vk_config.group_id)
         self._create_user_session(vk_config.user_token)
-        self._init_current_user_param()
         self._init_menu()
-
-    def _init_current_user_param(self):
+        self.current_menu = None
+        # Init current user params:
         self.city = None
         self.sex = None
         self.birth_year = None
         self.targets = None
-        self.curent_target = None
+        self.current_target = None
         self.find_offset = 0
 
     def create_obj(self, client_vk_id, imitation_users_list_from_api):
@@ -63,7 +63,8 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.check_user_info(current_user, user_info)           
 
         if not (self.city and self.sex and self.birth_year):
-            self.send_message(current_user, 'Измените настройки профиля и перезапустите бота!', keyboard=self.restart_menu)
+            self.send_message(current_user, 'Измените настройки профиля и перезапустите бота!',
+                              keyboard=self.restart_menu)
             self.current_menu = self.restart_menu
         else:
             self.send_message(current_user, f'Ваш город (city_id): {self.city}')
@@ -78,7 +79,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city')
         self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
         target = next(self.targets)
-        self.curent_target = target
+        self.current_target = target
         message = f'{target.first_name} {target.last_name}\n{target.url}'
         attachment = ",".join([photo.photo_link for photo in target.photos])
         self.send_message(current_user, message, attachment, keyboard=self.main_menu)
@@ -89,18 +90,21 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         try:
             target = next(self.targets)
         except StopIteration:
-            self.find_offset +=15
-            users = self.find_users(self.birth_year, self.sex, self.city, fields='bdate, sex, city', offset=self.find_offset)
+            self.find_offset += 15
+            users = self.find_users(self.birth_year,
+                                    self.sex, self.city,
+                                    fields='bdate, sex, city',
+                                    offset=self.find_offset)
             self.targets = self.create_obj(current_user, imitation_users_list_from_api=users)
             target = next(self.targets)            
-        self.curent_target = target
+        self.current_target = target
         message = f'{target.first_name} {target.last_name}\n{target.url}'
         attachment = ",".join([photo.photo_link for photo in target.photos])                    
         self.send_message(current_user, message, attachment)
         self.current_menu = self.main_menu
 
     def add_fav_state(self, current_user):
-        self.curent_target.add_favorite(current_user)
+        self.current_target.add_favorite(current_user)
         self.send_message(current_user, 'Данные обновлены', keyboard=self.main_menu)
         self.current_menu = self.main_menu
 
@@ -124,7 +128,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         
         search_start_flag = False
         
-        for event in self.longpoll.listen():            
+        for event in self.long_poll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
                 current_user = event.obj.message['from_id']
                 current_message = event.obj.message['text']

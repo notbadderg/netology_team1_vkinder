@@ -1,7 +1,7 @@
 import vk_api
 
 
-class VkUserApi():
+class VkUserApi:
     def __init__(self, vk_config):
         self._create_user_session(vk_config.user_token)
 
@@ -44,7 +44,7 @@ class VkUserApi():
         photo = self.get_photos_by_owner_id(user_id)
         result = []
 
-        for i, item in enumerate(sorted(photo['items'], key=lambda photo: photo['likes']['count'], reverse=True)):
+        for i, item in enumerate(sorted(photo['items'], key=lambda photo_: photo_['likes']['count'], reverse=True)):
             media_id = item['id']
             owner_id = item['owner_id']
             result.append((media_id, owner_id, f'photo{owner_id}_{media_id}'))

@@ -28,4 +28,4 @@ def _str_to_bool_convert(string):
     elif string == 'False':
         return False
     else:
-        raise Exception(f'Wrong parameter "{string}"')
+        raise Exception(f'Wrong parameter or typo: "{string}"')

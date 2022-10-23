@@ -1,17 +1,16 @@
 import psycopg2
-from config import DatabaseConfig
 from .db_tables import TABLES
 from .data_classes import Target, Photo
 
 
-class DatabaseInterface(DatabaseConfig):
-    def __init__(self):
-        super().__init__()
-        self.db_conn = psycopg2.connect(host=self.host,
-                                        port=self.port,
-                                        dbname=self.dbname,
-                                        user=self.user,
-                                        password=self.password)
+class DatabaseInterface:
+    def __init__(self, dbc):
+        self.db_conn = psycopg2.connect(host=dbc.host,
+                                        port=dbc.port,
+                                        dbname=dbc.dbname,
+                                        user=dbc.user,
+                                        password=dbc.password)
+        self.launch_drop = dbc.launch_drop
         self._create_table()
 
     def _create_table(self):

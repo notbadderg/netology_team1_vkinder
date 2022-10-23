@@ -1,18 +1,19 @@
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 
-class VkMenuApi():
+class VkMenuApi:
     def __init__(self):
         self._init_menu()
 
     def _init_menu(self):
         self.start_menu = self.get_start_menu()
-        self.restart_menu = self.get_restart_menu()        
+        self.restart_menu = self.get_restart_menu()
         self.main_menu = self.get_main_menu()
         self.stop_menu = self.get_stop_menu()
         self.current_menu = None
 
-    def get_start_menu(self):
+    @staticmethod
+    def get_start_menu():
         """ Начальное меню """
 
         keyboard = VkKeyboard(one_time=True)
@@ -20,7 +21,8 @@ class VkMenuApi():
 
         return keyboard.get_keyboard()
 
-    def get_main_menu(self):
+    @staticmethod
+    def get_main_menu():
         """ Основное меню """
 
         keyboard = VkKeyboard(one_time=True)
@@ -33,7 +35,8 @@ class VkMenuApi():
 
         return keyboard.get_keyboard()        
 
-    def get_restart_menu(self):
+    @staticmethod
+    def get_restart_menu():
         """ Меню перезапуска бота """
 
         keyboard = VkKeyboard(one_time=True)
@@ -41,7 +44,8 @@ class VkMenuApi():
 
         return keyboard.get_keyboard()
 
-    def get_stop_menu(self):
+    @staticmethod
+    def get_stop_menu():
         """ Меню после остановки бота """
 
         keyboard = VkKeyboard(one_time=True)
