@@ -87,7 +87,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             self.clients[current_client].search_start_flag = False
             return None
         else:
-            self.send_message(current_client, f'Твой город (city_id): {self.clients[current_client].city}')
+            self.send_message(current_client, f'Твой город: {self.get_city_by_id(self.clients[current_client].city)}')
             self.send_message(current_client, f'Твой пол: {"М" if self.clients[current_client].sex == 1 else "Ж"}')
             self.send_message(current_client, f'Твой год рождения: {self.clients[current_client].birth_year}')
             self.send_message(current_client, 'Давай знакомиться? Начни поиск!', keyboard=self.start_menu)
