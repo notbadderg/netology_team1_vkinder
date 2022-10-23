@@ -27,8 +27,10 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         DataClassesDBI.dbi = DatabaseInterface(db_config)
         self._create_group_session(vk_config.group_token, vk_config.group_id)
         self._create_user_session(vk_config.user_token)
+        self.client_timeout_sec = vk_config.client_timeout_sec
         self._init_menu()
         self.clients = {}
+
 
     @logger()
     def create_obj(self, client_vk_id, users_list_from_api):
@@ -212,11 +214,10 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             print(f'{n} - {client}', end='')
         print()
 
-    @staticmethod
-    def _timeout_delete(now, then):
+    def _timeout_delete(self, now, then):
         delta = now - then
         print(f'delta: {delta}, now: {now}, then: {then}')
-        if delta.seconds >= 10:
+        if delta.seconds >= self.client_timeout_sec:
             return True
         else:
             return False
