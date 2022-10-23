@@ -11,7 +11,7 @@ class VkUserApi:
         self.user_session = vk_api.VkApi(token=token)
         self.user_api = self.user_session.get_api()
 
-    def find_users(self, birth_year=None, sex=None, city=None, fields=None):
+    def find_users(self, birth_year=None, sex=None, city=None, fields=None, offset=0):
         """ Ищет пользователей по указанному фильтру """
 
         params = {
@@ -19,7 +19,8 @@ class VkUserApi:
             'sex': sex,
             'has_photo': '1',
             'fields': fields,
-            'birth_year': birth_year
+            'birth_year': birth_year,
+            'offset': offset
         }
 
         resp = self.user_api.users.search(**params)
