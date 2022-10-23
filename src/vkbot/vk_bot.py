@@ -125,8 +125,8 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
                                     count=15)
             self.clients[current_client].targets = self.create_obj(current_client, users_list_from_api=users)
             if not self.clients[current_client].targets.targets:
-                self.send_message(current_client, 'Похоже, что больше никого нет.', keyboard=self.main_menu)
-                self.clients[current_client].current_menu = self.main_menu
+                self.send_message(current_client, 'Похоже, что больше никого нет.', keyboard=self.search_finish_menu)
+                self.clients[current_client].current_menu = self.search_finish_menu
                 return None
             else:
                 target = next(self.clients[current_client].targets)
@@ -193,7 +193,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
                 else:
                     self.clients[current_client].last_activity_time = now
 
-                if current_message == 'Начать' or current_message == 'Перезапустить бота':
+                if current_message in ('Начать', 'Перезапустить бота', 'Начать сначала'):
                     self.search_start_state(event, current_client)
                 elif current_message == 'Начать поиск' and self.clients[current_client].search_start_flag:
                     self.search_active_state(current_client)
