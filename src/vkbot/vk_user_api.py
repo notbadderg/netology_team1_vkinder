@@ -29,7 +29,7 @@ class VkUserApi:
 
         return resp
 
-    @logger()
+    # @logger()
     def get_photos_by_owner_id(self, owner_id, album_id='profile', extended=1):
         """ Получить фото по id пользователя """
 
