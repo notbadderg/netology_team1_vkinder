@@ -18,6 +18,7 @@ def logger(log_filename='running.log'):
             f_return = func(*args, **kwargs)
             log_line = f'{f_start_date} - Func: {f_name} - Args: {args} {kwargs} - Return: {f_return}'
             print(log_line)
+            print()
             # write_log_line(log_line)
             return f_return
         return wrapper
