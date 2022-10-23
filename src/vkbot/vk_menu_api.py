@@ -64,3 +64,5 @@ class VkMenuApi:
         keyboard.add_button('Показать избранное', color=VkKeyboardColor.POSITIVE)
         keyboard.add_line()
         keyboard.add_button('Остановить бота', color=VkKeyboardColor.NEGATIVE)
+
+        return keyboard.get_keyboard()
