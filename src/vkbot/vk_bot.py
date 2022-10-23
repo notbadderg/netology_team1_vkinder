@@ -5,10 +5,10 @@ from .vk_menu_api import VkMenuApi
 from .db.data_classes import DataClassesDBI, Photo, Target, TargetsList
 from .db.db_interface import DatabaseInterface
 from .utils.logger import logger
-
+import datetime
 
 class Client:
-    def __init__(self, vk_id):
+    def __init__(self, vk_id, last_activity_time):
         self.vk_id = vk_id
         self.city = 3
         self.sex = None
@@ -18,6 +18,7 @@ class Client:
         self.current_menu = None
         self.find_offset = 0
         self.search_start_flag = False
+        self.last_activity_time = last_activity_time
 
 
 class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
@@ -158,6 +159,11 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.send_message(current_client, 'Бот остановлен', keyboard=self.stop_menu)
         self.clients[current_client].current_menu = self.stop_menu
 
+    def stop_state_due_inactivity(self, current_client):
+        self.send_message(current_client, 'Ты долго бездействовал, бот пока остановлен. До встречи!',
+                          keyboard=self.stop_menu)
+        self.clients[current_client].current_menu = self.stop_menu
+
     @logger()
     def incorrect_command_state(self, current_client):
         self.send_message(current_client, 'Пожалуйса, введи корректную команду!', keyboard=self.current_menu)
@@ -166,12 +172,25 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         """ https://vk.com/dev/bots_longpoll """
 
         for event in self.long_poll.listen():
+
+            # If online clients > 1 then outdated user will be "disconnected"
+            now = datetime.datetime.now()
+            if len(self.clients.keys()) > 1:
+                clients_vk_ids = list(self.clients.keys())
+                for client_vk_id in clients_vk_ids:
+                    if self._timeout_delete(now, self.clients[client_vk_id].last_activity_time):
+                        self.stop_state_due_inactivity(client_vk_id)
+                        self.clients.pop(client_vk_id)
+
             if event.type == VkBotEventType.MESSAGE_NEW:
                 self._show_active_users()
                 current_client = event.obj.message['from_id']
                 current_message = event.obj.message['text']
                 if current_client not in self.clients.keys():
-                    self.clients[current_client] = Client(current_client)
+                    self.clients[current_client] = Client(current_client, now)
+                else:
+                    self.clients[current_client].last_activity_time = now
+
                 if current_message == 'Начать' or current_message == 'Перезапустить бота':
                     self.search_start_state(event, current_client)
                 elif current_message == 'Начать поиск' and self.clients[current_client].search_start_flag:
@@ -192,6 +211,15 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         for n, client in enumerate(self.clients):
             print(f'{n} - {client}', end='')
         print()
+
+    @staticmethod
+    def _timeout_delete(now, then):
+        delta = now - then
+        print(f'delta: {delta}, now: {now}, then: {then}')
+        if delta.seconds >= 10:
+            return True
+        else:
+            return False
 
     def start(self):
         self._listener()
