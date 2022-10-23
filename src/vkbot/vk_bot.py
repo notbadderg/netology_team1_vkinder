@@ -148,7 +148,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         self.send_message(current_client, 'Избранное:', keyboard=self.main_menu)
         favorites = self.clients[current_client].targets.get_favorites()
         if len(favorites) == 0:
-            self.send_message(current_client, 'Список пока пуст.', keyboard=self.start_menu)
+            self.send_message(current_client, 'Список пока пуст.', keyboard=self.main_menu)
         else:
             for fav in favorites:
                 message = f'{fav.first_name} {fav.last_name}\n{fav.url}'
