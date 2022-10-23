@@ -10,6 +10,7 @@ class VkMenuApi:
         self.restart_menu = self.get_restart_menu()
         self.main_menu = self.get_main_menu()
         self.stop_menu = self.get_stop_menu()
+        self.search_finish_menu = self.get_search_finish_menu()
         self.current_menu = None
 
     @staticmethod
@@ -52,3 +53,14 @@ class VkMenuApi:
         keyboard.add_button('Начать', color=VkKeyboardColor.PRIMARY)
 
         return keyboard.get_keyboard()
+
+    @staticmethod
+    def get_search_finish_menu():
+        """ Меню после исчерпания вариантов поиска """
+
+        keyboard = VkKeyboard(one_time=True)
+        keyboard.add_button('Начать сначала', color=VkKeyboardColor.POSITIVE)
+        keyboard.add_line()
+        keyboard.add_button('Показать избранное', color=VkKeyboardColor.POSITIVE)
+        keyboard.add_line()
+        keyboard.add_button('Остановить бота', color=VkKeyboardColor.NEGATIVE)
