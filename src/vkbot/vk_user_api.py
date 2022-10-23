@@ -58,3 +58,14 @@ class VkUserApi:
                 return result
 
         return result
+
+    @logger()
+    def get_city_by_id(self, city_id):
+        """ Получить название города по его id """
+
+        params = {
+            'city_ids': city_id
+        }
+        resp = self.user_api.database.getCitiesById(**params)
+
+        return resp[0]['title']
