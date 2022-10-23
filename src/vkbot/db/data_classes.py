@@ -38,7 +38,7 @@ class TargetsList(DataClassesDBI):
     def __next__(self):
         self.cursor += 1
         if self.cursor == len(self.targets):
-            raise StopIteration
+            return 0
         return self.targets[self.cursor]
 
     def append(self, element: Target):
