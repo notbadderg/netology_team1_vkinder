@@ -37,8 +37,3 @@ def fixtures_preparation(client_vk_id, users, photos):
                                        photo_link='sample_link'))
         targets.append(target)
     return targets
-
-
-# if __name__ == '__main__':
-#     t = fixtures_preparation(**fixtures_good())
-#     print(t.targets[0].vk_id)

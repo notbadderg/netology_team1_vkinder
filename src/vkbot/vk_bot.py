@@ -70,6 +70,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
             self.clients[current_client].birth_year = user_info['bdate'].split('.')[2]
         else:
             self.send_message(current_client, 'Кажется, у тебя не указан год рождения!')
+        return None
 
     @logger()
     def search_start_state(self, event, current_client):
@@ -109,6 +110,7 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         attachment = ",".join([photo.photo_link for photo in target.photos])
         self.send_message(current_client, message, attachment, keyboard=self.main_menu)
         self.clients[current_client].current_menu = self.main_menu
+        return None
 
     @logger()
     def search_continue_state(self, current_client):
@@ -132,12 +134,14 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
         attachment = ",".join([photo.photo_link for photo in target.photos])
         self.send_message(current_client, message, attachment)
         self.clients[current_client].current_menu = self.main_menu
+        return None
 
     @logger()
     def add_fav_state(self, current_client):
         self.clients[current_client].current_target.add_favorite(current_client)
         self.send_message(current_client, 'Данные обновлены', keyboard=self.main_menu)
         self.clients[current_client].current_menu = self.main_menu
+        return None
 
     @logger()
     def show_fav_state(self, current_client):
@@ -151,20 +155,24 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
                 attachment = ",".join([photo.photo_link for photo in fav.photos])
                 self.send_message(current_client, message, attachment, keyboard=self.main_menu)
         self.clients[current_client].current_menu = self.main_menu
+        return None
 
     @logger()
     def stop_state(self, current_client):
         self.send_message(current_client, 'Бот остановлен', keyboard=self.stop_menu)
         self.clients[current_client].current_menu = self.stop_menu
+        return None
 
     def stop_state_due_inactivity(self, current_client):
         self.send_message(current_client, 'Ты долго бездействовал, бот пока остановлен. До встречи!',
                           keyboard=self.stop_menu)
         self.clients[current_client].current_menu = self.stop_menu
+        return None
 
     @logger()
     def incorrect_command_state(self, current_client):
         self.send_message(current_client, 'Пожалуйса, введи корректную команду!', keyboard=self.current_menu)
+        return None
 
     def _listener(self):
         """ https://vk.com/dev/bots_longpoll """
@@ -202,12 +210,14 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
                     self.stop_state(current_client)
                 else:
                     self.incorrect_command_state(current_client)
+        return None
 
     def _show_active_users(self):
         print(f'ACTIVE USERS: {len(self.clients)}')
         for n, client in enumerate(self.clients):
             print(f'{n} - {client}', end='')
         print()
+        return None
 
     def _timeout_delete(self, now, then):
         delta = now - then
@@ -219,3 +229,4 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
 
     def start(self):
         self._listener()
+        return None

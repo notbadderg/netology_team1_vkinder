@@ -79,15 +79,6 @@ class DatabaseInterface:
                                         WHERE f.target_vk_id IS NULL)
                     RETURNING t.vk_id;
                 """)
-                # curs.execute("""
-                #     DELETE FROM photo AS p
-                #      WHERE p.target_vk_id IN (SELECT p.target_vk_id
-                #                          FROM photo AS p
-                #                               LEFT JOIN target AS t
-                #                                      ON t.vk_id = p.target_vk_id
-                #                         WHERE t.vk_id IS NULL)
-                #     RETURNING p.target_vk_id;
-                # """)
         return result
 
     def get_client_favorites_list(self, client_vk_id: int) -> list:

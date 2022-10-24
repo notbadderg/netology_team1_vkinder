@@ -1,5 +1,4 @@
 import vk_api
-
 from .utils.logger import logger
 
 
@@ -39,6 +38,7 @@ class VkUserApi:
 
         self.user_session = vk_api.VkApi(token=token)
         self.user_api = self.user_session.get_api()
+        return None
 
     @logger()
     def find_users(self, client=None, fields=None, count=15):
@@ -61,7 +61,6 @@ class VkUserApi:
             'count': count
         }
         resp = self.user_api.users.search(**params)
-
         return resp
 
     # @logger()
@@ -81,7 +80,6 @@ class VkUserApi:
             'extended': extended
         }
         resp = self.user_api.photos.get(**params)
-
         return resp
 
     @logger()
@@ -103,8 +101,8 @@ class VkUserApi:
             result.append((media_id, owner_id, f'photo{owner_id}_{media_id}'))
             if i == 2:
                 return result
-
-        return result
+        else:
+            return result
 
     @logger()
     def get_city_by_id(self, city_id):
@@ -118,5 +116,4 @@ class VkUserApi:
             'city_ids': city_id
         }
         resp = self.user_api.database.getCitiesById(**params)
-
         return resp[0]['title']
