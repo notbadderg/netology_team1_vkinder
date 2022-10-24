@@ -43,7 +43,6 @@ class VkBot(VkGroupApi, VkUserApi, VkMenuApi):
                             user['last_name'],
                             f'https://vk.com/id{user["id"]}')
             targets.append(target)
-
         return iter(targets)
 
     @logger()
